@@ -1,42 +1,59 @@
 const TelegramBot = require("node-telegram-bot-api");
 // const sendChart = require('./chart');
-const token = "1150544717:AAGgPlAinuqPlLzPHM41EweZO0_LdmXrDMo";
+const token = '1150544717:AAGgPlAinuqPlLzPHM41EweZO0_LdmXrDMo';
 const sqlite = require("sqlite3");
 const fetch = require("node-fetch");
-// const sendChart, createGoal, createEntrie = require('./helpers');
-const db = new sqlite.Database(
-  process.env.TEST_DATABASE || "./database.sqlite"
-);
+const moment = require('moment');
+// const db = new sqlite.Database(
+//   process.env.HEROKU_DB || "./database.sqlite"
+// );
+const Pool = require('pg').Pool
+const pool = new Pool({
+  user: 'me',
+  host: 'localhost',
+  database: 'leonardo',
+  password: 'password',
+  port: 5432,
+});
 
 trackerBot = new TelegramBot(token, { polling: true });
 
 trackerBot.onText(/\/start/, (msg) => {
   // console.log(msg);
-  trackerBot.sendMessage(msg.chat.id, `👋 Приветик, ${msg.from.first_name}!`);
-  db.get(
+  trackerBot.sendMessage(msg.chat.id, `
+  Привет 🖖
+
+Я помогу тебе фиксировать твои ежедневные активности (вроде медитации, сна, еды), и буду присылать еженедельные сводки по ним, чтобы можно было посмотреть на их трекшн и предпринять какие-то шаги по улучшению ситуации.
+
+Например, сегодня ты спал не очень, и оцениваешь сон на 2 из 5. Тебе нужно выбрать «Сон» и поставить соответствующую оценку. В конце недели увидишь динамику оценок своего сна 📊
+
+Выбери команду '/record' если хочешь записать значение и '/stats', чтобы посмотреть на общий результат. 
+
+Давай начнем и все станет понятно 🙌
+  `);
+  pool.query(
     `
         SELECT * FROM Users WHERE user_id=${msg.from.id};`,
     (err, user) => {
-      console.log(user);
-      if (!user) {
+      console.log(user.rows[0]);
+      if (!user || user.rows[0] == undefined) {
         console.log("Creating new user...");
-        db.run(
-          `
+        pool.query(`
             INSERT INTO Users(user_id,chat_id)
-            VALUES ('${msg.from.id}',${msg.chat.id});`,
-          function (err) {
+            VALUES ('${msg.from.id}',${msg.chat.id}) RETURNING id;`,
+          function (err,res) {
             if (err) {
               console.log(err);
             }
-            console.log(this.lastID);
-            db.get(
-              `SELECT * FROM Users WHERE id=${this.lastID};`,
+            console.log(res.rows[0]);
+            pool.query(
+              `SELECT * FROM Users WHERE id=${res.rows[0].id};`,
               (err, data) => {
                 if (err) {
                   console.log(err);
                 }
                 console.log("User data");
-                console.log(data);
+                console.log(data.rows);
               }
             );
           }
@@ -78,11 +95,11 @@ trackerBot.on("callback_query", (callbackData) => {
   let req = callbackData.data.split("_");
   let goalId;
   if (req[0] === "goal") {
-    db.get(`SELECT * FROM Goals WHERE name='${req[1]}';`, (err, data) => {
+    pool.query(`SELECT * FROM Goals WHERE name='${req[1]}';`, (err, data) => {
       if (err) {
         console.log(err);
       }
-      console.log(data);
+      console.log(data.rows);
       // TODO: Это можно снести, потому что мы изначально все создаем
       if (!data) {  
         createGoal(req[1], callbackData.message.chat.id);
@@ -109,9 +126,12 @@ trackerBot.on("callback_query", (callbackData) => {
     createEntrie(req[0], req[2], callbackData.message.chat.id);
     trackerBot.sendMessage(
       callbackData.message.chat.id,
-      `✅ Записал ${req[2]} в ${req[0]}`
+      `
+✅ Записал ${req[2]} в ${req[0]}. 
+      
+Выбирай /record для записи новой оценки, или /stats, чтобы посмотреть результат. `
     );
-    getStats(req[0],7,callbackData.message.chat.id);
+    // getStats(req[0],7,callbackData.message.chat.id);
 
   } else if (req[0] === 'stats') {
     trackerBot.sendMessage(
@@ -135,7 +155,7 @@ trackerBot.on("callback_query", (callbackData) => {
   }
 });
 
-function sendChart(id, activity,data) {
+function sendChart(id, activity,data, period) {
   const chart = {
     format: "png",
     chart: {
@@ -144,7 +164,7 @@ function sendChart(id, activity,data) {
         labels: data.dates,
         datasets: [
           {
-            label: `${activity} на этой неделе`,
+            label: `${activity} за ${period} дней`,
             data: data.values,
           },
         ],
@@ -164,71 +184,71 @@ function sendChart(id, activity,data) {
       let imageUrl = json.url;
       console.log(imageUrl);
       trackerBot.sendPhoto(id, imageUrl, {
-        caption: `Вот что получилось за последнюю неделю 📈`,
+        caption: `Вот что получилось за ${period} дней 📈`,
       });
     });
 }
 
 function createGoal(goalName, userId) {
   // goal : name, name, user_id, range
-  db.run(
-    `
+  pool.query(`
     INSERT INTO Goals(name,user_id) 
-    VALUES ('${goalName}', ${userId});`,
-    function (err) {
-      db.get(`SELECT * FROM GOALS WHERE id=${this.lastID};`, (err, data) => {
+    VALUES ('${goalName}', ${userId}) RETURNING id;`,
+    function (err,data) {
+      pool.query(`SELECT * FROM GOALS WHERE id=${data.rows[0].id};`, (err, data) => {
         if (err) {
           console.log(err);
         }
-        console.log(data);
-      });
-    }
-  );
+        console.log(data.rows);
+      })
+    });
 }
 
 function createEntrie(goalName, amount, userId) {
-  db.get(
+  pool.query(
     `SELECT * FROM Goals WHERE name='${goalName}' AND user_id=${userId};`,
     (err, data) => {
-      if (!data) {
-        db.run(`INSERT INTO Goals('${goalName}',${userId});`, function (err) {
+      console.log(data.rows);
+      console.log(data.rows.length);
+      if (data.rows.length === 0 || data.rows == undefined) {
+        pool.query(`INSERT INTO Goals('${goalName}',${userId}) RETURNING id;`, function (err,data) {
           if (err) {
             console.log(err);
           }
-          db.run(
+          pool.query(
             `
         INSERT INTO Entries(goal_id,amount,date, user_id) 
-        VALUES (${this.lastID}, ${amount}, DATE('now'), ${userId});`,
-            function (err) {
+        VALUES (${data.rows[0].id}, ${amount}, NOW(), ${userId}) RETURNING id;`,
+            function (err,data) {
               if (err) {
                 console.log(err);
               }
-              db.get(
-                `SELECT * FROM Entries WHERE id=${this.lastID};`,
+              pool.query(
+                `SELECT * FROM Entries WHERE id=${data.rows[0].id};`,
                 (err, data) => {
                   if (err) {
                     console.log(err);
                   }
                   console.log('Created entrie:');
-                  console.log(data);
+                  console.log(data.rows);
                 }
               );
             }
           );
         });
-      }
-      db.run(
-        `
-            INSERT INTO Entries(goal_id,amount,date, user_id) 
-            VALUES (${data.id}, ${amount}, DATE('now'), ${userId});`,
+      } 
+      pool.query(`
+            INSERT INTO Entries(goal_id,amount,date,user_id) 
+            VALUES (${data.rows[0].id}, ${amount}, NOW(), ${userId}) RETURNING id;`,
         function (err) {
-          db.get(
-            `SELECT * FROM Entries WHERE id=${this.lastID};`,
+          pool.query(
+            console.log(data.rows)
+            `SELECT * FROM Entries WHERE id=${data.rows[0].id};`,
             (err, data) => {
               if (err) {
                 console.log(err);
               }
-              console.log(data);
+              console.log(data.rows);
             }
           );
         }
@@ -238,43 +258,54 @@ function createEntrie(goalName, amount, userId) {
 }
 
 function getStats(goal,period,userId) {
-    db.serialize(() => {
-      db.get(`SELECT * FROM Goals WHERE name='${goal}' AND user_id=${userId};`, (err,data) => {
+    let chartData = {dates: [], values: [] }
+    for (let i = Number(period); i >= 0; i--) {
+      let date = moment().subtract('days', Number(i)).format('YYYY-MM-DD');
+      chartData.dates.push(date);
+    }
+      pool.query(`SELECT * FROM Goals WHERE name='${goal}' AND user_id=${userId};`, (err,data) => {
         if (err) {
             console.log(err);
         }
         console.log('heres goal data')
-        console.log(data);
-        db.all(`SELECT * FROM Entries WHERE user_id=${userId} AND goal_id=${data.id}`, (err,data) => {
+        console.log(data.rows);
+        pool.query(`SELECT * FROM Entries WHERE user_id=${userId} AND goal_id=${data.rows[0].id}`, (err,data) => {
           if (err) {
               console.log(err);
           }
           console.log('heres all entries by goal data');
-          console.log(data);
+          console.log(data.rows);
         })
-        db.all(`SELECT * FROM Entries WHERE date <= DATE('now') AND date > DATE('now','-${period} days')
-        AND goal_id=${data.id} AND user_id=${userId};`, (err,data) => {
+        pool.query(`SELECT * FROM Entries WHERE date <= NOW() AND date > NOW() - INTERVAL '-${period} DAYS'
+        AND goal_id=${data.rows[0].id} AND user_id=${userId};`, (err,data) => {
             if (err) {
                 console.log(err);
             }
             console.log(`heres all entries by goal by period of ${period} days`);
-            console.log(data);
-            let chartData = {dates: [], values: [] }
-            data.forEach(item => {
-              chartData.dates.push(item.date);
-              chartData.values.push(item.amount);
-              // dataForMessage += `${item.date}: ${item.amount},      `;
+            console.log(data.rows);
+            let dataFromDB = {dates: [], items: [] }
+            data.rows.forEach(item => {
+              dataFromDB.dates.push(item.date);
+              dataFromDB.items.push({date: item.date, amount: item.amount})
+            })
+            chartData.dates.forEach(date => {
+              if (dataFromDB.dates.includes(date)) {
+                dataFromDB.items.forEach(item => {
+                  if (item.date === date) {
+                    chartData.values.push(item.amount)
+                  }
+                })
+              } else {
+                chartData.values.push(0);
+              }
             })
             trackerBot.sendMessage(userId,`Вот результаты: `);
-            sendChart(userId,goal,chartData);
+            sendChart(userId,goal,chartData,period);
             });
       })
-    }) 
 }
 
-trackerBot.onText(/\/stats/, (msg) => {
-    //   console.log(msg);
-    //   trackerBot.sendMessage(msg.chat.id, `👋 Приветик, ${msg.from.first_name}!`);
+trackerBot.onText(/\/stats/, (msg) => { 
     console.log(msg.chat.id);
     trackerBot.sendMessage(msg.chat.id, "Выбери что хочешь посчитать", {
       reply_markup: {

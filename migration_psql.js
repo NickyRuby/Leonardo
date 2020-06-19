@@ -1,39 +1,43 @@
-const sqlite = require('sqlite3');
-const db = new sqlite.Database(process.env.TEST_DATABASE || './database.sqlite');
+const Pool = require('pg').Pool
+const pool = new Pool({
+  user: 'me',
+  host: 'localhost',
+  database: 'leonardo',
+  password: 'password',
+  port: 5432,
+})
 
-db.run(`
+pool.query(`
     CREATE TABLE IF NOT EXISTS Users (
-        id INTEGER PRIMARY KEY,
+        id SERIAL PRIMARY KEY,
         user_id INTEGER NOT NULL,
         chat_id INTEGER NOT NULL
     );
-`, function(err) {
+`,(err,res) => {
     if (err) {
-        console.log(err);
-    } else {
-        console.log('Table Users created');
+        throw err;
     }
+    console.log('Table Users Created');
 });
 
-db.run(`
+pool.query(`
     CREATE TABLE IF NOT EXISTS Goals (
-        id INTEGER PRIMARY KEY,
-        name INTEGER NOT NULL,
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
         user_id INTEGER NOT NULL,
         range TEXT,
         FOREIGN KEY (user_id) REFERENCES Users(id)
     );
-`, function(err) {
+`, (err,res) => {
     if (err) {
-        console.log(err);
-    } else {
-        console.log('Table Goals created');
+        throw err;
     }
+    console.log('Table Goals Created');
 });
 
-db.run(`
+pool.query(`
     CREATE TABLE IF NOT EXISTS Entries (
-        id INTEGER PRIMARY KEY,
+        id SERIAL PRIMARY KEY,
         goal_id INTEGER NOT NULL,
         amount INTEGER NOT NULL,
         date DATE NOT NULL,
@@ -41,10 +45,9 @@ db.run(`
         FOREIGN KEY (goal_id) REFERENCES Goals(id),
         FOREIGN KEY (user_id) REFERENCES Users(id)  
     );
-`, function(err) {
+`, (err,res) => {
     if (err) {
-        console.log(err);
-    } else {
-        console.log('Table Entries created');
+        throw err;
     }
+    console.log('Table Entries Created');
 });
