@@ -3,6 +3,9 @@ require('dotenv').config();
 const token = process.env.TOKEN;
 const fetch = require("node-fetch");
 const moment = require("moment");
+require('https').createServer().listen(process.env.PORT || 5000).on('request', function(req, res){
+  res.end('')
+});
 
 const Pool = require("pg").Pool;
 const pool = new Pool({
