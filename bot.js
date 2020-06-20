@@ -332,6 +332,13 @@ trackerBot.onText(/\/stats/, (msg) => {
 });
 
 
-trackerBot.on("polling_error", (err) => console.log(err))
+trackerBot.on("polling_error", (err) => console.log(err));
+
+var reqTimer = setTimeout(function wakeUp() {
+  request("https://nameless-gorge-19527.herokuapp.com", function() {
+     console.log("WAKE UP DYNO");
+  });
+  return reqTimer = setTimeout(wakeUp, 1200000);
+}, 1200000);
 
 module.exports = {createGoal,createEntrie, pool}
