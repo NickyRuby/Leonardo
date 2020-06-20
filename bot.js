@@ -217,28 +217,43 @@ function createGoal(goalName, userId) {
 
 // TODO: Make Create Goal Function
 function createEntrie(goalName, amount, userId) {
+  let goalId;
   // TODO: Добавить проверку на то существует ли уже коммит
   pool.query(
     `SELECT * FROM Goals WHERE name='${goalName}' AND user_id=${userId};`,
     (err, data) => {
+        // проверяем есть ли уже энтри 
+        goalId = data.rows[0].id;
+        pool.query(
+          `SELECT * FROM Entries WHERE goal_id=${goalId}
+          AND user_id=${userId} AND date= DATE(NOW());`,
+          (err, data) => {
+            if (err) {
+              console.log(err);
+            }
+            console.log(data.rows);
+            if (data.rows.length === 0) {
+                  pool.query(`   
+                  INSERT INTO Entries(goal_id,amount,date,user_id) 
+                  VALUES (${goalId}, ${amount}, NOW(), ${userId}) RETURNING *;`,
+                    function (err,data) {
+                      console.log("Новый энтри:");
+                      console.log(data.rows[0]);
+                    });
+            } else {
+              pool.query(
+                `UPDATE Entries 
+                SET amount=${amount} 
+                WHERE goal_id=${goalId}
+                AND user_id=${userId} AND date= DATE(NOW()) RETURNING *;`,
+                (err, data) => {  
+                  console.log('Обновили энтри');
+                  console.log(data.rows[0]);
+                });
+            }
             // cоздаем энтри
-        pool.query(`   
-              INSERT INTO Entries(goal_id,amount,date,user_id) 
-              VALUES (${data.rows[0].id}, ${amount}, NOW(), ${userId}) RETURNING id;`,
-          function (err,data) {
-            pool.query(
-              `SELECT * FROM Entries WHERE id=${data.rows[0].id};`,
-              (err, data) => {
-                if (err) {
-                  console.log(err);
-                }
-                console.log("Новый энтри:");
-                console.log(data.rows);
-              }
-            );
-          }
-        );
-      });
+          });
+    });
 }
 
 function getStats(goal, period, userId) {
