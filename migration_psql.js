@@ -9,9 +9,7 @@ const pool = new Pool({
 
 pool.query(`
     CREATE TABLE IF NOT EXISTS Users (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER NOT NULL,
-        chat_id INTEGER NOT NULL
+        user_id INTEGER PRIMARY KEY
     );
 `,(err,res) => {
     if (err) {
@@ -26,7 +24,7 @@ pool.query(`
         name TEXT NOT NULL,
         user_id INTEGER NOT NULL,
         range TEXT,
-        FOREIGN KEY (user_id) REFERENCES Users(id)
+        FOREIGN KEY (user_id) REFERENCES Users(user_id)
     );
 `, (err,res) => {
     if (err) {
@@ -43,7 +41,7 @@ pool.query(`
         date DATE NOT NULL,
         user_id INTEGER NOT NULL,
         FOREIGN KEY (goal_id) REFERENCES Goals(id),
-        FOREIGN KEY (user_id) REFERENCES Users(id)  
+        FOREIGN KEY (user_id) REFERENCES Users(user_id)  
     );
 `, (err,res) => {
     if (err) {
