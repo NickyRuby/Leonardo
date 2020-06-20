@@ -1,25 +1,19 @@
-const sqlite = require('sqlite3');
-const db = new sqlite.Database(process.env.TEST_DATABASE || './database.sqlite');
+const createGoal = require('./bot').createGoal;
+const createEntrie = require('./bot').createEntrie;
+const pool = require('./bot').pool;
 
-// db.run(`
-//     CREATE TABLE IF NOT EXISTS Entries (
-//         id INTEGER PRIMARY KEY,
-//         goal_id INTEGER NOT NULL,
-//         amount INTEGER NOT NULL,
-//         date DATE NOT NULL,
-//         user_id INTEGER NOT NULL,
-//         FOREIGN KEY (goal_id) REFERENCES Goals(id),
-//         FOREIGN KEY (user_id) REFERENCES Users(id)  
-//     );
-// `, function(err) {
-//     if (err) {
-//         console.log(err);
-//     } else {
-//         console.log('Table Entries created');
-//     }
-// });
 
-// for (let i = 1; i < 150; i++) {
+for (let i = 1; i < 50; i++) {
+    let rand = Math.floor(Math.random() * 5) + 1;
+    pool.query(`   
+    INSERT INTO Entries(goal_id,amount,date,user_id) 
+    VALUES (60, ${rand}, DATE(NOW() - INTERVAL '${i} DAYS'), 119821330) RETURNING *;`,
+    function (err,data) {
+        console.log("Новый энтри:");
+        console.log(data.rows[0]);
+    });
+}
+
 //     db.run(`
 //         INSERT INTO Entries(goal_id,amount,date, user_id) 
 //         VALUES ('${i}', ${i}, DATE('now','${i} day'), ${i});`, function(err) {
@@ -42,12 +36,12 @@ const db = new sqlite.Database(process.env.TEST_DATABASE || './database.sqlite')
 //     console.log(data);
 // })
 
-db.all(`SELECT * FROM Entries WHERE user_id=140904466;`, (err,data) => {
-    if (err) {
-        console.log(err);
-        console.log(data.length);
-    }
-    console.log(data);
-})
+// db.all(`SELECT * FROM Entries WHERE user_id=140904466;`, (err,data) => {
+//     if (err) {
+//         console.log(err);
+//         console.log(data.length);
+//     }
+//     console.log(data);
+// })
 
 // db.all

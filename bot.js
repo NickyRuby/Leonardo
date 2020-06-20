@@ -138,9 +138,9 @@ trackerBot.on("callback_query", (callbackData) => {
         reply_markup: {
           inline_keyboard: [
             [
-              { text: "Текущая неделя", callback_data: `${req[1]}_period_7` },
-              { text: "14 дней", callback_data: `${req[1]}_period_14` },
-              { text: "30 дней", callback_data: `${req[1]}_period_30` },
+              { text: "Текущая неделя", callback_data: `${req[1]}_period_6` },
+              { text: "14 дней", callback_data: `${req[1]}_period_13` },
+              { text: "30 дней", callback_data: `${req[1]}_period_29` },
             ],
           ],
         },
@@ -262,6 +262,7 @@ function getStats(goal, period, userId) {
     let date = moment().subtract("days", Number(i)).format("YYYY-MM-DD");
     chartData.dates.push(date);
   }
+  console.log(chartData);
   pool.query(
     `SELECT * FROM Goals WHERE name='${goal}' AND user_id=${userId};`,
     (err, data) => {
@@ -281,7 +282,7 @@ function getStats(goal, period, userId) {
         }
       );
       pool.query(
-        `SELECT * FROM Entries WHERE date <= NOW() AND date > NOW() - INTERVAL '-${period} DAYS'
+        `SELECT * FROM Entries WHERE (date <= DATE(NOW()) AND date > DATE(NOW() - INTERVAL '${period} DAYS'))
         AND goal_id=${data.rows[0].id} AND user_id=${userId};`,
         (err, data) => {
           if (err) {
@@ -291,9 +292,12 @@ function getStats(goal, period, userId) {
           console.log(data.rows);
           let dataFromDB = { dates: [], items: [] };
           data.rows.forEach((item) => {
-            dataFromDB.dates.push(item.date);
-            dataFromDB.items.push({ date: item.date, amount: item.amount });
+            let humanDate = moment(item.date).format("YYYY-MM-DD");
+            dataFromDB.dates.push(humanDate);
+            dataFromDB.items.push({ date: humanDate, amount: item.amount });
           });
+          console.log('То что получили из БД');
+          console.log(dataFromDB);
           chartData.dates.forEach((date) => {
             if (dataFromDB.dates.includes(date)) {
               dataFromDB.items.forEach((item) => {
@@ -305,6 +309,7 @@ function getStats(goal, period, userId) {
               chartData.values.push(0);
             }
           });
+          console.log(chartData);
           trackerBot.sendMessage(userId, `Вот результаты: `);
           sendChart(userId, goal, chartData, period);
         }
@@ -331,4 +336,4 @@ trackerBot.onText(/\/stats/, (msg) => {
 
 trackerBot.on("polling_error", (err) => console.log(err))
 
-module.exports = {createGoal,createEntrie}
+module.exports = {createGoal,createEntrie, pool}
