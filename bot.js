@@ -1,19 +1,15 @@
 const TelegramBot = require("node-telegram-bot-api");
-// const sendChart = require('./chart');
-const token = "1150544717:AAGgPlAinuqPlLzPHM41EweZO0_LdmXrDMo";
-const sqlite = require("sqlite3");
+require('dotenv').config();
+const token = process.env.TOKEN;
 const fetch = require("node-fetch");
 const moment = require("moment");
-// const db = new sqlite.Database(
-//   process.env.HEROKU_DB || "./database.sqlite"
-// );
+
 const Pool = require("pg").Pool;
 const pool = new Pool({
-  user: "me",
-  host: "localhost",
-  database: "leonardo",
-  password: "password",
-  port: 5432,
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
 });
 
 trackerBot = new TelegramBot(token, { polling: true });
@@ -129,7 +125,6 @@ trackerBot.on("callback_query", (callbackData) => {
       
 Выбирай /record для записи новой оценки, или /stats, чтобы посмотреть результат. `
     );
-    // getStats(req[0],7,callbackData.message.chat.id);
   } else if (req[0] === "stats") {
     trackerBot.sendMessage(
       callbackData.message.chat.id,
