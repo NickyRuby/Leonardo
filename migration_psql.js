@@ -1,11 +1,10 @@
-const Pool = require('pg').Pool
+const Pool = require("pg").Pool;
 const pool = new Pool({
-  user: 'me',
-  host: 'localhost',
-  database: 'leonardo',
-  password: 'password',
-  port: 5432,
-})
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
 
 pool.query(`
     CREATE TABLE IF NOT EXISTS Users (
