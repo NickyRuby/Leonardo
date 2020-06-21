@@ -1,6 +1,5 @@
 const TelegramBot = require("node-telegram-bot-api");
 require('dotenv').config();
-const token = process.env.TOKEN;
 const fetch = require("node-fetch");
 const moment = require("moment");
 require('https').createServer().listen(process.env.PORT || 5000).on('request', function(req, res){
@@ -15,11 +14,11 @@ const pool = new Pool({
   }
 });
 
-trackerBot = new TelegramBot(token, { polling: true });
+leonardo = new TelegramBot(process.env.TOKEN, { polling: true });
 
-trackerBot.onText(/\/start/, (msg) => {
+leonardo.onText(/\/start/, (msg) => {
   // console.log(msg);
-  trackerBot.sendMessage(
+  leonardo.sendMessage(
     msg.chat.id,
     `
   Привет 🖖
@@ -77,9 +76,9 @@ trackerBot.onText(/\/start/, (msg) => {
   );
 });
 
-trackerBot.onText(/\/record/, (msg) => {
+leonardo.onText(/\/record/, (msg) => {
   console.log(msg.chat.id);
-  trackerBot.sendMessage(msg.chat.id, "Выбери что нужно затрекать", {
+  leonardo.sendMessage(msg.chat.id, "Выбери что нужно затрекать", {
     reply_markup: {
       inline_keyboard: [
         [{ text: "🧘🏻‍♂️ Медитацию", callback_data: "goal_Медитация" }],
@@ -92,7 +91,7 @@ trackerBot.onText(/\/record/, (msg) => {
   });
 });
 
-trackerBot.on("callback_query", (callbackData) => {
+leonardo.on("callback_query", (callbackData) => {
   let req = callbackData.data.split("_");
   if (req[0] === "goal") {
     pool.query(`SELECT * FROM Goals WHERE name='${req[1]}';`, (err, data) => {
@@ -102,7 +101,7 @@ trackerBot.on("callback_query", (callbackData) => {
       console.log("Это то что мы у нас есть в базе по этой цели:");
       console.log(data.rows);
     });
-    trackerBot.sendMessage(
+    leonardo.sendMessage(
       callbackData.message.chat.id,
       `${req[1]}, принято. Как прошло?`,
       {
@@ -121,7 +120,7 @@ trackerBot.on("callback_query", (callbackData) => {
     );
   } else if (req[1] === "mark") {
     createEntrie(req[0], req[2], callbackData.message.chat.id);
-    trackerBot.sendMessage(
+    leonardo.sendMessage(
       callbackData.message.chat.id,
       `
 ✅ Записал ${req[2]} в ${req[0]}. 
@@ -129,7 +128,7 @@ trackerBot.on("callback_query", (callbackData) => {
 Выбирай /record для записи новой оценки, или /stats, чтобы посмотреть результат. `
     );
   } else if (req[0] === "stats") {
-    trackerBot.sendMessage(
+    leonardo.sendMessage(
       callbackData.message.chat.id,
       `${req[1]}, принято. За какой период?`,
       {
@@ -178,7 +177,7 @@ function sendChart(id, activity, data, period) {
     .then((json) => {
       let imageUrl = json.url;
       console.log(imageUrl);
-      trackerBot.sendPhoto(id, imageUrl, {
+      leonardo.sendPhoto(id, imageUrl, {
         caption: `Вот что получилось за ${period} дней 📈`,
       });
     });
@@ -308,7 +307,7 @@ function getStats(goal, period, userId) {
             }
           });
           console.log(chartData);
-          trackerBot.sendMessage(userId, `Вот результаты: `);
+          leonardo.sendMessage(userId, `Вот результаты: `);
           sendChart(userId, goal, chartData, period);
         }
       );
@@ -316,9 +315,9 @@ function getStats(goal, period, userId) {
   );
 }
 
-trackerBot.onText(/\/stats/, (msg) => {
+leonardo.onText(/\/stats/, (msg) => {
   console.log(msg.chat.id);
-  trackerBot.sendMessage(msg.chat.id, "Выбери что хочешь посчитать", {
+  leonardo.sendMessage(msg.chat.id, "Выбери что хочешь посчитать", {
     reply_markup: {
       inline_keyboard: [
         [{ text: "🧘🏻‍♂️ Медитацию", callback_data: "stats_Медитация" }],
@@ -332,6 +331,6 @@ trackerBot.onText(/\/stats/, (msg) => {
 });
 
 
-trackerBot.on("polling_error", (err) => console.log(err));
+leonardo.on("polling_error", (err) => console.log(err));
 
-module.exports = {createGoal,createEntrie, pool}
+module.exports = {createGoal,createEntrie, pool, leonardo}

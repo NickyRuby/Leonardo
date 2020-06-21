@@ -15,7 +15,8 @@
   "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "migrate": "node migration_psql.js"
+    "migrate": "node migration_psql.js",
+    "start": "npm start"
   },
   "repository": {
     "type": "git",
