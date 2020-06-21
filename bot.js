@@ -135,9 +135,9 @@ leonardo.on("callback_query", (callbackData) => {
         reply_markup: {
           inline_keyboard: [
             [
-              { text: "Текущая неделя", callback_data: `${req[1]}_period_6` },
-              { text: "14 дней", callback_data: `${req[1]}_period_13` },
-              { text: "30 дней", callback_data: `${req[1]}_period_29` },
+              { text: "Текущая неделя", callback_data: `${req[1]}_period_7` },
+              { text: "14 дней", callback_data: `${req[1]}_period_14` },
+              { text: "30 дней", callback_data: `${req[1]}_period_30` },
             ],
           ],
         },
@@ -254,9 +254,10 @@ function createEntrie(goalName, amount, userId) {
 }
 
 function getStats(goal, period, userId) {
+  let numPeriod = Number(period) - 1;
   let chartData = { dates: [], values: [] };
-  for (let i = Number(period); i >= 0; i--) {
-    let date = moment().subtract("days", Number(i)).format("YYYY-MM-DD");
+  for (let i = numPeriod; i >= 0; i--) {
+    let date = moment().subtract("days", i).format("YYYY-MM-DD");
     chartData.dates.push(date);
   }
   console.log(chartData);
@@ -279,7 +280,7 @@ function getStats(goal, period, userId) {
         }
       );
       pool.query(
-        `SELECT * FROM Entries WHERE (date <= DATE(NOW()) AND date > DATE(NOW() - INTERVAL '${period} DAYS'))
+        `SELECT * FROM Entries WHERE (date <= DATE(NOW()) AND date > DATE(NOW() - INTERVAL '${numPeriod} DAYS'))
         AND goal_id=${data.rows[0].id} AND user_id=${userId};`,
         (err, data) => {
           if (err) {
@@ -307,7 +308,6 @@ function getStats(goal, period, userId) {
             }
           });
           console.log(chartData);
-          leonardo.sendMessage(userId, `Вот результаты: `);
           sendChart(userId, goal, chartData, period);
         }
       );
