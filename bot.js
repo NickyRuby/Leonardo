@@ -330,6 +330,22 @@ leonardo.onText(/\/stats/, (msg) => {
   });
 });
 
+function sendReminders() {
+  let timeNow = new Date().getUTCHours();
+  if (timeNow === 19) {
+    pool.query('SELECT * FROM Users', (err,data)=> {
+      if (err) {
+          throw err;
+      } 
+      let message = `Как день? Нажимай /record, чтобы записать результаты 🚀`;
+      data.rows.forEach(user => {
+          leonardo.sendMessage(user.user_id,message);
+      });
+    });
+  }
+}
+
+setInterval(sendReminders, 30000);
 
 leonardo.on("polling_error", (err) => console.log(err));
 
