@@ -1,5 +1,5 @@
-const leonardo = require('./bot').leonardo;
-const pool = require('./bot').pool;
+// const sendMessage = require("node-telegram-bot-api").sendMessage;
+// const pool = require('./bot').pool;
 
 pool.query('SELECT * FROM Users', (err,data)=> {
     if (err) {
