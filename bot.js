@@ -345,7 +345,7 @@ function sendReminders() {
   }
 }
 
-setInterval(sendReminders, 30000);
+// setInterval(sendReminders, 30000);
 
 leonardo.on("polling_error", (err) => console.log(err));
 
