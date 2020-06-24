@@ -335,9 +335,8 @@ leonardo.onText(/\/stats/, (msg) => {
 
 function sendReminders() {  
 
-
-  if (new Date().getHours() == 22 && new Date().getMinutes() == 19 && new Date().getSeconds() == 0) {
-    pool.query('SELECT * FROM Users', (err,data)=> {
+  if (new Date().getHours() == 22 && new Date().getMinutes() == 20 && new Date().getSeconds() == 0) {
+    pool.query('SELECT * FROM Users WHERE user_ud=119821330', (err,data)=> {
       if (err) {
           throw err;
       } 
