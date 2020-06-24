@@ -8,6 +8,8 @@ require('https').createServer().listen(process.env.PORT || 5000).on('request', f
 
 let today = new Date()
 let hasSent = true;
+let greetings = ['Йоу!','Ну как оно?','Че как?','Время пришло!','Не забыл?','Давай-давай','Как день?'];
+
 
 const Pool = require("pg").Pool;
 const pool = new Pool({
@@ -340,13 +342,14 @@ function sendReminders() {
   let s = new Date().getSeconds();
   console.log(`${h}:${m}:${s}`);
 
-  if (h == 19 && m == 35 && s == 0) {
+  if (h == 19 && m == 43 && s == 0) {
 
-    pool.query('SELECT * FROM Users WHERE user_ud=119821330', (err,data)=> {
+    pool.query('SELECT * FROM Users WHERE user_id=119821330', (err,data)=> {
       if (err) {
           throw err;
       } 
-      let message = `Как день? Нажимай /record, чтобы записать результаты 🚀`;
+      let yo = greetings[Math.floor(Math.random() * Math.floor(8))]
+      let message = `${yo} Нажимай /record, чтобы записать результаты 🚀`;
       data.rows.forEach(user => {
           leonardo.sendMessage(user.user_id,message);
       });
