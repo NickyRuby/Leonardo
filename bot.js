@@ -340,7 +340,7 @@ function sendReminders() {
   let s = new Date().getSeconds();
   console.log(`${h}:${m}:${s}`);
 
-  if (h == 22 && m == 25 && s == 0) {
+  if (h == 19 && m == 35 && s == 0) {
 
     pool.query('SELECT * FROM Users WHERE user_ud=119821330', (err,data)=> {
       if (err) {
