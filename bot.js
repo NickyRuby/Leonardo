@@ -334,8 +334,14 @@ leonardo.onText(/\/stats/, (msg) => {
 });
 
 function sendReminders() {  
+  
+  let h = new Date().getHours();
+  let m =  new Date().getMinutes();
+  let s = new Date().getSeconds();
+  console.log(`${h}:${m}:${s}`);
 
-  if (new Date().getHours() == 22 && new Date().getMinutes() == 25 && new Date().getSeconds() == 0) {
+  if (h == 22 && m == 25 && s == 0) {
+
     pool.query('SELECT * FROM Users WHERE user_ud=119821330', (err,data)=> {
       if (err) {
           throw err;
