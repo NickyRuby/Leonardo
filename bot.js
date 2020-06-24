@@ -6,6 +6,9 @@ require('https').createServer().listen(process.env.PORT || 5000).on('request', f
   res.end('')
 });
 
+let today = new Date()
+let hasSent = true;
+
 const Pool = require("pg").Pool;
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -330,9 +333,10 @@ leonardo.onText(/\/stats/, (msg) => {
   });
 });
 
-function sendReminders() {
-  let timeNow = new Date().getUTCHours();
-  if (timeNow === 19) {
+function sendReminders() {  
+
+
+  if (new Date().getHours() == 22 && new Date().getMinutes() == 19 && new Date().getSeconds() == 0) {
     pool.query('SELECT * FROM Users', (err,data)=> {
       if (err) {
           throw err;
@@ -345,7 +349,7 @@ function sendReminders() {
   }
 }
 
-// setInterval(sendReminders, 30000);
+setInterval(sendReminders, 1000); 
 
 leonardo.on("polling_error", (err) => console.log(err));
 
