@@ -5,7 +5,7 @@ const moment = require("moment");
 require('https').createServer().listen(process.env.PORT || 5000).on('request', function(req, res){
   res.end('')
 });
-let greetings = ['Йоу!','Ну как оно?','Че как?','Время пришло!','Не забыл?','Давай-давай','Как день?'];
+let greetings = ['Йоу!','Ну как оно?','Че как?','Время пришло!','Не забыл?','Давай-давай!','Как день?'];
 
 
 const Pool = require("pg").Pool;
@@ -338,18 +338,19 @@ function sendReminders() {
   let m =  new Date().getMinutes();
   let s = new Date().getSeconds();
 
-  if (h == 19 && m == 50 && s == 0) {
+  if (h == 19 && m == 0 && s == 0) {
 
-    pool.query('SELECT * FROM Users', (err,data)=> {
+    pool.query('SELECT * FROM Users;', (err,data)=> {
       if (err) {
           throw err;
       } 
       let yo = greetings[Math.floor(Math.random() * Math.floor(8))]
-      let message = `${yo} Нажимай /record, чтобы записать результаты 🚀. Вчера забыл напомнить, сорян`;
+      let message = `${yo} Нажимай /record, чтобы записать результаты 🚀`;
       data.rows.forEach(user => {
           leonardo.sendMessage(user.user_id,message);
       });
-      console.log(`Отправил напоминания ${data.rows.length} пользователям`);
+      console.log(data.rows)
+;     sconsole.log(`Отправил напоминания ${data.rows.length} пользователям`);
     });
   }
 }
