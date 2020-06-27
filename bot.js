@@ -350,7 +350,7 @@ function sendReminders() {
           leonardo.sendMessage(user.user_id,message);
       });
       console.log(data.rows)
-;     sconsole.log(`Отправил напоминания ${data.rows.length} пользователям`);
+;     console.log(`Отправил напоминания ${data.rows.length} пользователям`);
     });
   }
 }
