@@ -8,9 +8,9 @@
     "moment": "^2.26.0",
     "node-fetch": "^2.6.0",
     "node-telegram-bot-api": "^0.50.0",
-    "pg": "^8.2.1",
+    "pg": "^8.11.0",
     "sqlite": "^4.0.9",
-    "sqlite3": "^4.2.0"
+    "sqlite3": "^5.1.6"
   },
   "devDependencies": {},
   "scripts": {
