@@ -5,7 +5,7 @@
   "main": "bot.js",
   "dependencies": {
     "dotenv": "^8.2.0",
-    "moment": "^2.26.0",
+    "moment": "^2.29.4",
     "node-fetch": "^2.6.0",
     "node-telegram-bot-api": "^0.50.0",
     "pg": "^8.2.1",
